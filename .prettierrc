@@ -1,0 +1,29 @@
+{
+  "singleQuote": true,
+  "printWidth": 120,
+  "bracketSpacing": true,
+  "arrowParens": "always",
+  "useTabs": false,
+  "semi": true,
+  "tabWidth": 2,
+  "overrides": [
+    {
+      "files": "*.yml",
+      "options": {
+        "singleQuote": false
+      }
+    },{
+      "files": ".gitlab-ci.yml",
+      "options": {
+        "singleQuote": true,
+        "bracketSpacing": false
+      }
+    },{
+      "files": "helm/**/*.yaml",
+      "options": {
+        "singleQuote": true,
+        "bracketSpacing": false
+      }
+    }
+  ]
+}
