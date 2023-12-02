@@ -4,7 +4,7 @@ import {
   Link,
   // useHistory
 } from 'react-router-dom';
-import './Register.css';
+import './register.css';
 import { auth } from 'src/config/firebaseConfiguration';
 import { registerWithEmailAndPassword, signInWithGoogle } from 'src/utils/firebase.util';
 
@@ -52,9 +52,9 @@ function Register() {
         <button className="register__btn register__google" onClick={signInWithGoogle}>
           Register with Google
         </button>
-        <div>
+        {/* <div>
           Already have an account? <Link to="/">Login</Link> now.
-        </div>
+        </div> */}
       </div>
     </div>
   );
