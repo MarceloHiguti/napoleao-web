@@ -1,7 +1,7 @@
 import { Box, Typography } from '@mui/material';
 import { DeckCardProps } from './DeckCard.model';
 
-export const DeckCard = ({ card, side, onClick }: DeckCardProps) => {
+export const DeckCardComponent = ({ card, side, onClick }: DeckCardProps) => {
   const { key, value, suit } = card;
 
   const handleCardClick = () => {

@@ -1,5 +1,5 @@
 import { NUMBERS, SUITS } from '../../constants/deckCard.const';
-import { createDeck } from '../../utils/card.util';
+import { createDeck, drawCard, shuffleDeck } from '../../utils/card.util';
 import { DeckCard, DeckCard as DeckCardClass } from '../DeckCard/DeckCard.class';
 import { DeckConstructor } from './Deck.model';
 
@@ -9,7 +9,7 @@ export class Deck {
   constructor({ numbers = NUMBERS, suits = SUITS, extraCards }: DeckConstructor) {
     const deck = createDeck({ numbers, suits, extraCards });
     this.cards = deck.map(({ key, suit, value }) => new DeckCardClass({ key, suit, value }));
-    this.shuffle();
+    this.cards = this.shuffle();
   }
 
   get getCards() {
@@ -25,22 +25,13 @@ export class Deck {
   }
 
   drawCard(number = 1) {
-    const returnCards = [];
+    const { cardsDrew, deckPile } = drawCard({ deck: this.cards, numberToDraw: number });
+    this.cards = deckPile as DeckCard[];
 
-    for (let i = number; i > 0; i--) {
-      returnCards.push(this.cards.pop());
-    }
-
-    return returnCards;
+    return cardsDrew;
   }
 
   shuffle() {
-    let j, x, i;
-    for (i = this.cards.length - 1; i > 0; i--) {
-      j = Math.floor(Math.random() * (i + 1));
-      x = this.cards[i];
-      this.cards[i] = this.cards[j];
-      this.cards[j] = x;
-    }
+    return shuffleDeck(this.cards);
   }
 }

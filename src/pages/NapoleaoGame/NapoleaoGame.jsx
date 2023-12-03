@@ -2,7 +2,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import { Box, Button, Divider, Grid, Typography } from '@mui/material';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Deck as DeckClass } from '../../components/Deck/Deck.class';
-import { DeckCard } from '../../components/DeckCard/DeckCard';
+import { DeckCardComponent } from '../../components/DeckCard/DeckCardComponent';
 import { distributeCards } from '../../utils/card.util';
 import { BoardCenter } from '../BoardCenter/BoardCenter';
 import {
@@ -69,22 +69,38 @@ export const NapoleaoGame = () => {
         <>
           <Grid container sx={{ marginBottom: '24px' }}>
             <Grid item xs={6} sx={{ border: '1px solid' }}>
-              <DeckCard key={'player_01'} card={splitedCards.get(1)[0]} onClick={(card) => handleClickCard(1, card)} />
+              <DeckCardComponent
+                key={'player_01'}
+                card={splitedCards.get(1)[0]}
+                onClick={(card) => handleClickCard(1, card)}
+              />
             </Grid>
             <Grid item xs={6} sx={{ border: '1px solid' }}>
-              <DeckCard key={'player_02'} card={splitedCards.get(2)[0]} onClick={(card) => handleClickCard(2, card)} />
+              <DeckCardComponent
+                key={'player_02'}
+                card={splitedCards.get(2)[0]}
+                onClick={(card) => handleClickCard(2, card)}
+              />
             </Grid>
           </Grid>
 
           <Grid container sx={{ marginBottom: '24px' }}>
             <Grid item xs={2} sx={{ border: '1px solid' }}>
-              <DeckCard key={'player_03'} card={splitedCards.get(3)[0]} onClick={(card) => handleClickCard(3, card)} />
+              <DeckCardComponent
+                key={'player_03'}
+                card={splitedCards.get(3)[0]}
+                onClick={(card) => handleClickCard(3, card)}
+              />
             </Grid>
             <Grid item xs={8} sx={{ border: '1px solid' }}>
               <BoardCenter selectedCards={selectedCards} />
             </Grid>
             <Grid item xs={2} sx={{ border: '1px solid' }}>
-              <DeckCard key={'player_04'} card={splitedCards.get(4)[0]} onClick={(card) => handleClickCard(4, card)} />
+              <DeckCardComponent
+                key={'player_04'}
+                card={splitedCards.get(4)[0]}
+                onClick={(card) => handleClickCard(4, card)}
+              />
             </Grid>
           </Grid>
 
@@ -92,7 +108,7 @@ export const NapoleaoGame = () => {
             <Grid item xs={5}></Grid>
             {selectedCards[0] && (
               <Grid item xs={2} sx={{ border: '1px solid' }}>
-                <DeckCard key={selectedCards[0].key} card={selectedCards[0]} />
+                <DeckCardComponent key={selectedCards[0].key} card={selectedCards[0]} />
               </Grid>
             )}
           </Grid>
@@ -101,7 +117,7 @@ export const NapoleaoGame = () => {
             <Grid item xs={12} sx={{ border: '1px solid' }}>
               <Box sx={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }} gap={2}>
                 {splitedCards.get(0).map((card) => (
-                  <DeckCard key={card.key} card={card} onClick={(card) => handleClickCard(0, card)} />
+                  <DeckCardComponent key={card.key} card={card} onClick={(card) => handleClickCard(0, card)} />
                 ))}
               </Box>
             </Grid>

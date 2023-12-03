@@ -1,4 +1,4 @@
-import { Deck } from 'src/components/Deck/Deck.class';
+import { DeckCard } from 'src/components/DeckCard/DeckCard.class';
 import { DeckCardConstructor } from 'src/components/DeckCard/DeckCard.model';
 
 export interface CreateDeckParams {
@@ -9,12 +9,35 @@ export interface CreateDeckParams {
   deckNumber?: number;
 }
 
+export type CardType = DeckCard | DeckCardConstructor;
+export type DeckType = Array<CardType>;
+
 export interface DistributeCardsParams {
-  deck: Deck;
+  deck: DeckType;
   numberOfCards: number;
   numberOfPlayers: number;
+  playersIndex?: Array<string>;
 }
 
 export interface BuildNumbersWithLabelsParams {
   numbers: number[];
+}
+
+export interface DrawCardsParams {
+  deck: DeckType;
+  numberToDraw?: number;
+}
+
+export interface DrawCardsReturnValues {
+  cardsDrew: Array<CardType>;
+  deckPile: DeckType;
+}
+
+export interface RecursiveDistributeCardsParams {
+  deck: DeckType;
+  numberOfCards: number;
+  numberOfPlayers: number;
+  playerIndex: number;
+  playersObject: Record<string, DeckType>;
+  playersCustomIndex?: Array<string>;
 }

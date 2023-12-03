@@ -1,7 +1,24 @@
+import { Deck } from 'src/components/Deck/Deck.class';
 import { DeckCardConstructor } from 'src/components/DeckCard/DeckCard.model';
-import { BuildNumbersWithLabelsParams, CreateDeckParams, DistributeCardsParams } from 'src/models/card.util.model';
+import { PILE } from 'src/constants/deckCard.const';
+import {
+  BuildNumbersWithLabelsParams,
+  CardType,
+  CreateDeckParams,
+  DeckType,
+  DistributeCardsParams,
+  DrawCardsParams,
+  DrawCardsReturnValues,
+  RecursiveDistributeCardsParams,
+} from 'src/models/card.util.model';
 
-export function createDeck({ numbers, suits, extraCards, deckModifierCallback, deckNumber = 1 }: CreateDeckParams) {
+export function createDeck({
+  numbers,
+  suits,
+  extraCards,
+  deckModifierCallback,
+  deckNumber = 1,
+}: CreateDeckParams): DeckCardConstructor[] {
   const deck: DeckCardConstructor[] = [];
 
   for (let suit of suits) {
@@ -19,7 +36,7 @@ export function createDeck({ numbers, suits, extraCards, deckModifierCallback, d
       key: `${extraCards.value}_${extraCards.suit}`,
       value: extraCards.value,
       suit: extraCards.suit,
-      extraParams: extraCards.extraParams,
+      extraParams: extraCards?.extraParams ?? {},
     });
   }
 
@@ -28,16 +45,59 @@ export function createDeck({ numbers, suits, extraCards, deckModifierCallback, d
   return finalDeck;
 }
 
-export function distributeCards({ deck, numberOfCards, numberOfPlayers }: DistributeCardsParams) {
-  const playersObject = new Map();
+function recursiveDistributeCards({
+  deck,
+  numberOfCards,
+  numberOfPlayers,
+  playerIndex,
+  playersObject,
+  playersCustomIndex,
+}: RecursiveDistributeCardsParams): void {
+  const { cardsDrew, deckPile } = drawCard({ deck, numberToDraw: numberOfCards });
+  const isPileCards = playerIndex === numberOfPlayers;
+  const playerCustomIndex = playersCustomIndex?.[playerIndex] ?? `${playerIndex}`;
+  const indexString = isPileCards ? PILE : playerCustomIndex;
+  playersObject[indexString] = cardsDrew;
 
-  for (let i = 0; i < numberOfPlayers; i++) {
-    playersObject.set(i, deck.drawCard(numberOfCards));
+  if (playerIndex < numberOfPlayers) {
+    recursiveDistributeCards({
+      deck: deckPile,
+      numberOfCards,
+      numberOfPlayers,
+      playerIndex: playerIndex + 1,
+      playersObject,
+      playersCustomIndex,
+    });
   }
+}
 
-  const cardsLeft = deck.getCardsLength;
-  if (cardsLeft > 0) {
-    playersObject.set('pile', deck.drawCard(cardsLeft));
+export function distributeCards({
+  deck,
+  numberOfCards,
+  numberOfPlayers,
+  playersIndex,
+}: DistributeCardsParams): Record<string, DeckType> {
+  const playersObject: Record<string, DeckType> = {};
+  const copyDeck = [...deck];
+  if (deck instanceof Deck) {
+    for (let i = 0; i < numberOfPlayers; i++) {
+      const playerIndex = playersIndex?.[i] ?? `${i}`;
+      playersObject[playerIndex] = deck.drawCard(numberOfCards);
+    }
+
+    const cardsLeft = deck.getCardsLength;
+    if (cardsLeft > 0) {
+      playersObject[PILE] = deck.drawCard(cardsLeft);
+    }
+  } else {
+    recursiveDistributeCards({
+      deck: copyDeck,
+      numberOfCards,
+      numberOfPlayers,
+      playerIndex: 0,
+      playersObject,
+      playersCustomIndex: playersIndex,
+    });
   }
 
   return playersObject;
@@ -71,4 +131,35 @@ export function buildNumbersWithLabels({ numbers }: BuildNumbersWithLabelsParams
 
     return { ...acc, ...numberWithLabel };
   }, {});
+}
+
+export function shuffleDeck<T>(cards: Array<T>): Array<T> {
+  const copyCards = [...cards];
+  let j, x, i;
+  for (i = copyCards.length - 1; i > 0; i--) {
+    j = Math.floor(Math.random() * (i + 1));
+    x = copyCards[i];
+    copyCards[i] = copyCards[j];
+    copyCards[j] = x;
+  }
+
+  return copyCards;
+}
+
+export function drawCard({ deck, numberToDraw = 1 }: DrawCardsParams): DrawCardsReturnValues {
+  if (deck.length === 0) {
+    throw Error('no cards to draw');
+  } else {
+    const cardsDrew: Array<CardType> = [];
+    const copyDeck = [...deck];
+
+    for (let i = numberToDraw; i > 0; i--) {
+      const cardToDraw = copyDeck.pop();
+      if (!!cardToDraw) {
+        cardsDrew.push(cardToDraw);
+      }
+    }
+
+    return { cardsDrew, deckPile: copyDeck };
+  }
 }
