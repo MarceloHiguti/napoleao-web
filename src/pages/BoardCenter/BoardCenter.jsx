@@ -1,24 +1,53 @@
+import { useMemo } from 'react';
 import { Box } from '@mui/material';
 import { DeckCardComponent } from '../../components/DeckCard/DeckCardComponent';
 
-export const BoardCenter = ({ selectedCards }) => {
+export const BoardCenter = ({ selectedCards, currentPlayerIndex, playersIdArray }) => {
+  const otherPlayers = useMemo(() => {
+    const playersIds = playersIdArray.filter((playerId) => playerId !== currentPlayerIndex);
+    const restArray = Array.from({ length: 4 - playersIds.length }, (_, i) => i);
+    return [...playersIds, ...restArray];
+  }, [playersIdArray]);
+  console.log('otherPlayers', otherPlayers);
+  console.log('selectedCards', selectedCards);
+
   return (
     <Box>
       <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-        <Box>{selectedCards[1] && <DeckCardComponent key={selectedCards[1].key} card={selectedCards[1]} />}</Box>
-        <Box>{selectedCards[2] && <DeckCardComponent key={selectedCards[2].key} card={selectedCards[2]} />}</Box>
+        <Box>
+          {selectedCards[otherPlayers[0]] && (
+            <DeckCardComponent key={selectedCards[otherPlayers[0]].key} card={selectedCards[otherPlayers[0]]} />
+          )}
+        </Box>
+        <Box>
+          {selectedCards[otherPlayers[1]] && (
+            <DeckCardComponent key={selectedCards[otherPlayers[1]].key} card={selectedCards[otherPlayers[1]]} />
+          )}
+        </Box>
       </Box>
 
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)' }}>
         <Box></Box>
-        <Box>{selectedCards[3] && <DeckCardComponent key={selectedCards[3].key} card={selectedCards[3]} />}</Box>
+        <Box>
+          {selectedCards[otherPlayers[2]] && (
+            <DeckCardComponent key={selectedCards[otherPlayers[2]].key} card={selectedCards[otherPlayers[2]]} />
+          )}
+        </Box>
         <Box></Box>
-        <Box>{selectedCards[4] && <DeckCardComponent key={selectedCards[4].key} card={selectedCards[4]} />}</Box>
+        <Box>
+          {selectedCards[otherPlayers[3]] && (
+            <DeckCardComponent key={selectedCards[otherPlayers[3]].key} card={selectedCards[otherPlayers[3]]} />
+          )}
+        </Box>
         <Box></Box>
       </Box>
 
       <Box sx={{ display: 'grid', gridTemplateColumns: '1fr' }}>
-        <Box>{selectedCards[0] && <DeckCardComponent key={selectedCards[0].key} card={selectedCards[0]} />}</Box>
+        <Box>
+          {selectedCards?.[currentPlayerIndex] && (
+            <DeckCardComponent key={selectedCards[currentPlayerIndex].key} card={selectedCards[currentPlayerIndex]} />
+          )}
+        </Box>
       </Box>
     </Box>
   );

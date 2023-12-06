@@ -7,6 +7,6 @@ export interface DeckCardConstructor {
 
 export interface DeckCardProps {
   card: DeckCardConstructor;
-  side?: string;
+  isOffside?: boolean;
   onClick?: (card: DeckCardConstructor) => void;
 }
