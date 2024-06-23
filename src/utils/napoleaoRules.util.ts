@@ -4,30 +4,32 @@ import {
   IncludeSuperSuitAndCopinhoInCardsParams,
   NapoleaoDeckModifierParams,
   NapoleaoRoundWinnerParams,
+  NapoleaoRoundWinnerResult,
 } from 'src/models/napoleaoRules.util.model';
 import { ACE_AMPLIFIER, COPINHO_AMPLIFIER, SUPER_SUIT_AMPLIFIER } from '../constants/deckCard.const';
+import { DeckCard } from 'src/components/DeckCard/DeckCard.class';
 
-export function napoleaoRoundWinner({ selectedCards }: NapoleaoRoundWinnerParams) {
-  const cardsArray = Object.values(selectedCards);
+export function napoleaoRoundWinner({ selectedCards }: NapoleaoRoundWinnerParams): NapoleaoRoundWinnerResult | null {
+  const cardsArray = Object.values(selectedCards).map((deckCardConstructor) => new DeckCard(deckCardConstructor));
   const numberOfSelectedCards = cardsArray?.length;
   if (numberOfSelectedCards !== 5) {
-    return -1;
+    return null;
   }
 
-  cardsArray.reduce(
-    ({ winnerIndex, winnerCardStregth, winnerCard }, cardByPlayer, playerIndex) => {
+  const winner = cardsArray.reduce(
+    ({ winnerId, winnerCardStregth, winnerCard }, cardByPlayer) => {
       const cardStrength = calculateCardStrength({ card: cardByPlayer, validSuit: cardByPlayer.getSuit });
       const isNewCardStronger = cardStrength > winnerCardStregth;
-      const newWinnerIndex = isNewCardStronger ? playerIndex : winnerIndex;
+      const newWinnerIndex = isNewCardStronger ? cardByPlayer.getOwnerId : winnerId;
       const newWinnerCard = isNewCardStronger ? cardByPlayer : winnerCard;
       const newwinnerCardStregth = isNewCardStronger ? cardStrength : winnerCardStregth;
 
-      return { winnerIndex: newWinnerIndex, winnerCard: newWinnerCard, winnerCardStregth: newwinnerCardStregth };
+      return { winnerId: newWinnerIndex, winnerCard: newWinnerCard, winnerCardStregth: newwinnerCardStregth };
     },
-    { winnerIndex: 0, winnerCard: { key: '', suit: '', value: 0 }, winnerCardStregth: 0 },
+    { winnerId: '', winnerCard: { key: '', suit: '', value: 0 }, winnerCardStregth: 0 },
   );
 
-  return 1;
+  return winner;
 }
 
 export function includeSuperSuitAndCopinhoInCards({

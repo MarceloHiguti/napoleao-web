@@ -8,6 +8,7 @@ import Login from './pages/Authentication/login/Login';
 import { NapoleaoGame } from './pages/NapoleaoGame/NapoleaoGame';
 import ErrorPage from './pages/ErrorPage/ErrorPage';
 import ChooseLobby from './pages/ChooseLobby/ChooseLobby';
+import Logout from './pages/Authentication/Logout';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
   {
     path: 'login',
     element: <Login />,
+  },
+  {
+    path: 'logout',
+    element: <Logout />,
   },
   {
     path: 'online-game',

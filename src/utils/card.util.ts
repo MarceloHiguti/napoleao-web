@@ -24,6 +24,7 @@ export function createDeck({
   for (let suit of suits) {
     for (let number of numbers) {
       deck.push({
+        ownerId: '',
         key: `${number}_${suit}_deck_${deckNumber}`,
         value: number,
         suit: suit,
@@ -33,6 +34,7 @@ export function createDeck({
 
   if (!!extraCards) {
     deck.push({
+      ownerId: '',
       key: `${extraCards.value}_${extraCards.suit}`,
       value: extraCards.value,
       suit: extraCards.suit,
@@ -58,6 +60,9 @@ function recursiveDistributeCards({
   const playerCustomIndex = playersCustomIndex?.[playerIndex] ?? `${playerIndex}`;
   const indexString = isPileCards ? PILE : playerCustomIndex;
   playersObject[indexString] = cardsDrew;
+  playersObject[indexString].forEach((card) => {
+    card.ownerId = playerCustomIndex;
+  });
 
   if (playerIndex < numberOfPlayers) {
     recursiveDistributeCards({
@@ -83,6 +88,9 @@ export function distributeCards({
     for (let i = 0; i < numberOfPlayers; i++) {
       const playerIndex = playersIndex?.[i] ?? `${i}`;
       playersObject[playerIndex] = deck.drawCard(numberOfCards);
+      playersObject[playerIndex].forEach((card) => {
+        card.ownerId = playerIndex;
+      });
     }
 
     const cardsLeft = deck.getCardsLength;

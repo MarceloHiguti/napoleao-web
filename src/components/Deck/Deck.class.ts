@@ -8,7 +8,7 @@ export class Deck {
 
   constructor({ numbers = NUMBERS, suits = SUITS, extraCards }: DeckConstructor) {
     const deck = createDeck({ numbers, suits, extraCards });
-    this.cards = deck.map(({ key, suit, value }) => new DeckCardClass({ key, suit, value }));
+    this.cards = deck.map(({ key, suit, value }) => new DeckCardClass({ ownerId: '', key, suit, value }));
     this.cards = this.shuffle();
   }
 

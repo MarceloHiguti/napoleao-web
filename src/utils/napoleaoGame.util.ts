@@ -39,6 +39,7 @@ export async function saveNapoleaoSplitedCardsInFirebase({
     playersIndex: playersOnline,
   });
   const collectionLobbyRef = collection(db, 'onlineLobby');
+
   setDoc(
     doc(collectionLobbyRef, idToConnect),
     {

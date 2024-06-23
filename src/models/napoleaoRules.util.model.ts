@@ -1,7 +1,13 @@
 import { DeckCard } from 'src/components/DeckCard/DeckCard.class';
+import { DeckCardConstructor } from 'src/components/DeckCard/DeckCard.model';
 
 export interface NapoleaoRoundWinnerParams {
-  selectedCards: Record<string, DeckCard>;
+  selectedCards: Record<string, DeckCardConstructor>;
+}
+export interface NapoleaoRoundWinnerResult {
+  winnerId: string;
+  winnerCard: { key: string; suit: string; value: number };
+  winnerCardStregth: number;
 }
 
 export interface IncludeSuperSuitAndCopinhoInCardsParams {

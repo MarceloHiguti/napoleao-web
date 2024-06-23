@@ -1,16 +1,22 @@
 import { DeckCardConstructor } from './DeckCard.model';
 
 export class DeckCard {
+  ownerId: string;
   key: string;
   suit: string;
   value: number;
   extraParams?: Record<string, any>;
 
-  constructor({ key, suit, value, extraParams }: DeckCardConstructor) {
+  constructor({ ownerId, key, suit, value, extraParams }: DeckCardConstructor) {
+    this.ownerId = ownerId;
     this.key = key;
     this.suit = suit;
     this.value = value;
     this.extraParams = extraParams ?? {};
+  }
+
+  get getOwnerId() {
+    return this.ownerId;
   }
 
   get getKey() {
@@ -27,6 +33,10 @@ export class DeckCard {
 
   get getExtraParams() {
     return this.extraParams;
+  }
+
+  set setOwnerId(newOwnerId: string) {
+    this.ownerId = newOwnerId;
   }
 
   set setSuit(newSuit: string) {

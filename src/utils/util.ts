@@ -20,7 +20,8 @@ export function convertObjectToMap<T>(objParam: Record<string, string>): Map<str
   const objectParsed = Object.entries(objParam).reduce((acc, [mapKey, mapValue]) => {
     const arrayValue = JSON.parse(mapValue);
     const arrayOfDeckCard = arrayValue.map(
-      ({ key, suit, value }: { key: string; suit: string; value: number }) => new DeckCardClass({ key, suit, value }),
+      ({ key, suit, value }: { key: string; suit: string; value: number }) =>
+        new DeckCardClass({ ownerId: '', key, suit, value }),
     );
     return {
       ...acc,

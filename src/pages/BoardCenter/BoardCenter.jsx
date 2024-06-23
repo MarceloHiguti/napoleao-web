@@ -3,11 +3,10 @@ import { Box } from '@mui/material';
 import { DeckCardComponent } from '../../components/DeckCard/DeckCardComponent';
 
 export const BoardCenter = ({ selectedCards, currentPlayerIndex, playersIdArray }) => {
-  const otherPlayers = useMemo(() => {
-    const playersIds = playersIdArray.filter((playerId) => playerId !== currentPlayerIndex);
-    const restArray = Array.from({ length: 4 - playersIds.length }, (_, i) => i);
-    return [...playersIds, ...restArray];
-  }, [playersIdArray]);
+  const otherPlayers = useMemo(
+    () => playersIdArray.filter((othersIds) => othersIds !== currentPlayerIndex),
+    [playersIdArray],
+  );
   console.log('otherPlayers', otherPlayers);
   console.log('selectedCards', selectedCards);
 

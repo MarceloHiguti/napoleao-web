@@ -1,4 +1,5 @@
 export interface DeckCardConstructor {
+  ownerId: string;
   key: string;
   suit: string;
   value: number;
