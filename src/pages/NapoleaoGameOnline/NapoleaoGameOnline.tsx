@@ -8,17 +8,20 @@ import { isEmpty, toString } from 'lodash';
 import { DeckCardComponent } from 'src/components/DeckCard/DeckCardComponent';
 import { DeckCard } from 'src/components/DeckCard/DeckCard.class';
 import { DeckCardConstructor } from 'src/components/DeckCard/DeckCard.model';
-import { saveNapoleaoSplitedCardsInFirebase, saveRoundCardsPlayed } from 'src/utils/napoleaoGame.util';
+import { saveNapoleaoSplitedCardsInFirebase, saveRoundCardsPlayed, updateGameProps } from 'src/utils/napoleaoGame.util';
 import { useCurrentUser } from 'src/hooks/useCurrentUser.hook';
 import { BoardCenter } from '../BoardCenter/BoardCenter';
 import { LobbyData, PlayersInLobby } from 'src/models/napoleaoGame.model';
 import { napoleaoRoundWinner } from 'src/utils/napoleaoRules.util';
 import { NapoleaoRoundWinnerResult } from 'src/models/napoleaoRules.util.model';
+import { ChooseNapoleao } from './ChooseNapoleao';
+import { NapoleaoGameOnlineProvider } from './NapoleaoGameOnlineContext';
+import { User } from 'firebase/auth';
 
 export const NapoleaoGameOnline = () => {
   const { lobbyId } = useParams();
   const lobbyIdString = toString(lobbyId);
-  const currentUser = useCurrentUser();
+  const currentUser = useCurrentUser() ?? ({} as User);
   const currentPlayerIndex = toString(currentUser?.uid);
 
   const [playersOnline, setPlayersOnline] = useState<ReadonlyArray<PlayersInLobby & { isBot: boolean }>>([]);
@@ -40,22 +43,26 @@ export const NapoleaoGameOnline = () => {
       playersOnline: playersOnline.map(({ uid }) => uid),
     });
     setGameStarted(true);
+    updateGameProps({ idToConnect: lobbyIdString });
   }, [playersIdArray]);
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   const [selectedCards, setSelectedCards] = useState<Record<number, DeckCardConstructor>>({});
   const [roundsCards, setRoundsCards] = useState<Record<number, Record<string, DeckCardConstructor>>>({});
-  const [roundNumber, setRoundNumber] = useState(1);
+  const [roundNumber, setRoundNumber] = useState(0);
   const [roundWinner, setRoundWinner] = useState<NapoleaoRoundWinnerResult | null>();
   const [superSuit, setSuperSuit] = useState('joker');
   const [copinho, setCopinho] = useState('joker');
-  const [splitedCards, setSplitedCards] = useState<Record<string, DeckCard[]>>();
+  const [splitedCards, setSplitedCards] = useState<Record<string, DeckCard[]>>({});
+  const [gameProps, setGameProps] = useState<Record<string, DeckCard[]>>({});
 
   const copinhoNumberRef = useRef();
   const copinhoSuitRef = useRef();
 
   const finishRound = useCallback(() => {
-    setRoundWinner(napoleaoRoundWinner({ selectedCards }));
+    const roundWinner = napoleaoRoundWinner({ selectedCards });
+    setRoundWinner(roundWinner);
+    console.log('round winner', roundWinner);
     setRoundNumber((prev) => prev + 1);
   }, [selectedCards]);
 
@@ -82,21 +89,23 @@ export const NapoleaoGameOnline = () => {
     const unsubscribe = onSnapshot(doc(db, 'onlineLobby', lobbyIdString), (snap) => {
       const lobbyData = snap.data() as LobbyData | undefined;
       if (!!lobbyData) {
-        const { players, playersCards, rounds } = lobbyData;
-        const playersOnline = players.map((onlinePlayer) => ({ ...onlinePlayer, isBot: false }));
+        const { players, playersCards, rounds, gameProps } = lobbyData;
+        const playersOnline = players?.map((onlinePlayer) => ({ ...onlinePlayer, isBot: false }));
 
         setPlayersOnline(playersOnline);
+        setGameProps(gameProps);
 
         if (!!playersCards) {
           setSplitedCards(playersCards);
           const onlinePlayers = players.map(({ uid }) => uid);
           const otherPlayers = Object.keys(playersCards)
             .filter((playerId) => playerId !== 'pile' && !onlinePlayers.includes(playerId))
-            .map((othePlayerId) => ({
+            .map((othePlayerId, index) => ({
               email: othePlayerId,
               name: othePlayerId,
               uid: othePlayerId,
               isBot: true,
+              index: index + 10,
             }));
 
           setPlayersOnline([...playersOnline, ...otherPlayers]);
@@ -112,124 +121,138 @@ export const NapoleaoGameOnline = () => {
   }, []);
 
   return (
-    <Table>
-      {!gameStarted && (
-        <Button variant="contained" onClick={startGame}>
-          start game
-        </Button>
-      )}
-      {!!playersOnline && (
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <div>
-            {playersOnline
-              .filter(({ isBot }) => !isBot)
-              .map(({ name, uid }) => (
-                <div key={uid}>{name}</div>
-              ))}
-          </div>
-          {gameStarted && (
-            <div>
-              <div>Round: {roundNumber}</div>
-              <div>
-                Last round winner:{' '}
-                {playersOnline.find(({ uid }) => roundWinner?.winnerId && roundWinner.winnerId === uid)?.name ?? ''}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {!isEmpty(splitedCards) && (
-        <>
-          <Grid container sx={{ marginBottom: '24px' }}>
-            <Grid
-              item
-              xs={6}
-              sx={{ border: '1px solid', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-            >
-              <DeckCardComponent
-                key={'player_01'}
-                card={{ ownerId: 'player_01', key: 'player_01', value: 2, suit: '' }}
-                isOffside
-              />
-            </Grid>
-            <Grid
-              item
-              xs={6}
-              sx={{ border: '1px solid', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-            >
-              <DeckCardComponent
-                key={'player_02'}
-                card={{ ownerId: 'player_02', key: 'player_02', value: 2, suit: '' }}
-                isOffside
-              />
-            </Grid>
-          </Grid>
-
-          <Grid container sx={{ marginBottom: '24px' }}>
-            <Grid
-              item
-              xs={2}
-              sx={{ border: '1px solid', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-            >
-              <DeckCardComponent
-                key={'player_03'}
-                card={{ ownerId: 'player_03', key: 'player_03', value: 2, suit: '' }}
-                isOffside
-              />
-            </Grid>
-            <Grid item xs={8} sx={{ border: '1px solid' }}>
-              <BoardCenter
-                selectedCards={selectedCards}
-                currentPlayerIndex={currentPlayerIndex}
-                playersIdArray={playersOnline.map(({ uid }) => uid)}
-              />
-            </Grid>
-            <Grid
-              item
-              xs={2}
-              sx={{ border: '1px solid', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-            >
-              <DeckCardComponent
-                key={'player_04'}
-                card={{ ownerId: 'player_04', key: 'player_04', value: 2, suit: '' }}
-                isOffside
-              />
-            </Grid>
-          </Grid>
-
-          <Grid container sx={{ marginBottom: '24px', marginTop: '96px' }}>
-            <Grid item xs={12} sx={{ border: '1px solid' }}>
-              <Box sx={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }} gap={2}>
-                {(splitedCards?.[currentPlayerIndex] ?? []).map((card) => (
-                  <DeckCardComponent
-                    key={card.key}
-                    card={card}
-                    onClick={(card) => handleClickCard(currentPlayerIndex, card)}
-                  />
-                ))}
-              </Box>
-            </Grid>
-          </Grid>
-        </>
-      )}
-      {gameStarted && (
-        <div style={{ display: 'flex', gap: 10, flexDirection: 'column', width: '30%' }}>
-          {otherPlayersIdArray.length > 0 &&
-            splitedCards &&
-            otherPlayersIdArray.map((otherPlayerId) => (
-              <Button
-                variant="contained"
-                onClick={() => handleClickCard(otherPlayerId, splitedCards[otherPlayerId][roundNumber])}
-              >
-                play card for number {otherPlayerId}
-              </Button>
-            ))}
-          <Button variant="contained" onClick={finishRound}>
-            finish round
+    <NapoleaoGameOnlineProvider
+      value={{
+        lobbyId: lobbyIdString,
+        currentUser,
+        playersOnline,
+        splitedCards,
+        gameProps,
+      }}
+    >
+      <Table>
+        {!gameStarted && (
+          <Button variant="contained" onClick={startGame}>
+            start game
           </Button>
-        </div>
-      )}
-    </Table>
+        )}
+
+        {gameStarted && roundNumber === 0 && !isEmpty(splitedCards) && <ChooseNapoleao />}
+
+        {!!playersOnline && !gameStarted && (
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div>
+              {playersOnline
+                .filter(({ isBot }) => !isBot)
+                .map(({ name, uid }) => (
+                  <div key={uid}>{name}</div>
+                ))}
+            </div>
+            {gameStarted && roundNumber > 0 && (
+              <div>
+                <div>Round: {roundNumber}</div>
+                <div>
+                  Last round winner:{' '}
+                  {playersOnline.find(({ uid }) => roundWinner?.winnerId && roundWinner.winnerId === uid)?.name ?? ''}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {roundNumber > 0 && !isEmpty(splitedCards) && (
+          <>
+            <Grid container sx={{ marginBottom: '24px' }}>
+              <Grid
+                item
+                xs={6}
+                sx={{ border: '1px solid', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+              >
+                <DeckCardComponent
+                  key={'player_01'}
+                  card={{ ownerId: 'player_01', key: 'player_01', value: 2, suit: '' }}
+                  isOffside
+                />
+              </Grid>
+              <Grid
+                item
+                xs={6}
+                sx={{ border: '1px solid', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+              >
+                <DeckCardComponent
+                  key={'player_02'}
+                  card={{ ownerId: 'player_02', key: 'player_02', value: 2, suit: '' }}
+                  isOffside
+                />
+              </Grid>
+            </Grid>
+
+            <Grid container sx={{ marginBottom: '24px' }}>
+              <Grid
+                item
+                xs={2}
+                sx={{ border: '1px solid', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+              >
+                <DeckCardComponent
+                  key={'player_03'}
+                  card={{ ownerId: 'player_03', key: 'player_03', value: 2, suit: '' }}
+                  isOffside
+                />
+              </Grid>
+              <Grid item xs={8} sx={{ border: '1px solid' }}>
+                <BoardCenter
+                  selectedCards={selectedCards}
+                  currentPlayerIndex={currentPlayerIndex}
+                  playersIdArray={playersOnline.map(({ uid }) => uid)}
+                />
+              </Grid>
+              <Grid
+                item
+                xs={2}
+                sx={{ border: '1px solid', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+              >
+                <DeckCardComponent
+                  key={'player_04'}
+                  card={{ ownerId: 'player_04', key: 'player_04', value: 2, suit: '' }}
+                  isOffside
+                />
+              </Grid>
+            </Grid>
+
+            <Grid container sx={{ marginBottom: '24px', marginTop: '96px' }}>
+              <Grid item xs={12} sx={{ border: '1px solid' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }} gap={2}>
+                  {(splitedCards?.[currentPlayerIndex] ?? []).map((card) => (
+                    <DeckCardComponent
+                      key={card.key}
+                      card={card}
+                      onClick={(card) => handleClickCard(currentPlayerIndex, card)}
+                    />
+                  ))}
+                </Box>
+              </Grid>
+            </Grid>
+          </>
+        )}
+
+        {gameStarted && roundNumber > 0 && (
+          <div style={{ display: 'flex', gap: 10, flexDirection: 'column', width: '30%' }}>
+            {otherPlayersIdArray.length > 0 &&
+              splitedCards &&
+              otherPlayersIdArray.map((otherPlayerId) => (
+                <Button
+                  variant="contained"
+                  onClick={() => handleClickCard(otherPlayerId, splitedCards[otherPlayerId][roundNumber])}
+                >
+                  play card for number {otherPlayerId}
+                </Button>
+              ))}
+            <Button variant="contained" onClick={finishRound}>
+              finish round
+            </Button>
+          </div>
+        )}
+      </Table>
+    </NapoleaoGameOnlineProvider>
   );
 };

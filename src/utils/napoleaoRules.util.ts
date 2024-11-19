@@ -11,6 +11,7 @@ import { DeckCard } from 'src/components/DeckCard/DeckCard.class';
 
 export function napoleaoRoundWinner({ selectedCards }: NapoleaoRoundWinnerParams): NapoleaoRoundWinnerResult | null {
   const cardsArray = Object.values(selectedCards).map((deckCardConstructor) => new DeckCard(deckCardConstructor));
+  console.log('cardsArray', cardsArray);
   const numberOfSelectedCards = cardsArray?.length;
   if (numberOfSelectedCards !== 5) {
     return null;
