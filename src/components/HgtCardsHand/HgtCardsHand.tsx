@@ -14,7 +14,7 @@ export const HgtCardsHand: FC<HgtCardsHandProps> = ({ cards, onClick }) => {
     <Grid item xs={12} sx={{ border: '1px solid' }}>
       <Box sx={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }} gap={2}>
         {cards.map((card) => (
-          <DeckCardComponent key={card.key} card={card} onClick={onClick} />
+          <DeckCardComponent key={card.key} card={card} onClick={onClick} {...(card?.extraProps ?? {})} />
         ))}
       </Box>
     </Grid>

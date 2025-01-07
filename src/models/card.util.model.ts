@@ -1,9 +1,10 @@
 import { DeckCard } from 'src/components/DeckCard/DeckCard.class';
 import { DeckCardConstructor } from 'src/components/DeckCard/DeckCard.model';
+import { SUITS_TYPES } from 'src/constants/deckCard.const';
 
 export interface CreateDeckParams {
   numbers: number[];
-  suits: string[];
+  suits: SUITS_TYPES[];
   extraCards?: Record<string, any>;
   deckModifierCallback?: (deck: DeckCardConstructor[]) => void;
   deckNumber?: number;

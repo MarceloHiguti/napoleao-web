@@ -1,4 +1,5 @@
 import { DeckCard as DeckCardClass } from 'src/components/DeckCard/DeckCard.class';
+import { SUITS_TYPES } from 'src/constants/deckCard.const';
 
 export function convertMapToString<T>(mapParam: Map<unknown, T>): string {
   const convertedObject = Object.fromEntries(mapParam);
@@ -20,7 +21,7 @@ export function convertObjectToMap<T>(objParam: Record<string, string>): Map<str
   const objectParsed = Object.entries(objParam).reduce((acc, [mapKey, mapValue]) => {
     const arrayValue = JSON.parse(mapValue);
     const arrayOfDeckCard = arrayValue.map(
-      ({ key, suit, value }: { key: string; suit: string; value: number }) =>
+      ({ key, suit, value }: { key: string; suit: SUITS_TYPES; value: number }) =>
         new DeckCardClass({ ownerId: '', key, suit, value }),
     );
     return {

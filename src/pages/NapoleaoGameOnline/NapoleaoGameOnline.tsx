@@ -8,7 +8,12 @@ import { isEmpty, toString } from 'lodash';
 import { DeckCardComponent } from 'src/components/DeckCard/DeckCardComponent';
 import { DeckCard } from 'src/components/DeckCard/DeckCard.class';
 import { DeckCardConstructor } from 'src/components/DeckCard/DeckCard.model';
-import { saveNapoleaoSplitedCardsInFirebase, saveRoundCardsPlayed, updateGameProps } from 'src/utils/napoleaoGame.util';
+import {
+  createOnlineGameProps,
+  saveNapoleaoSplitedCardsInFirebase,
+  saveRoundCardsPlayed,
+  updatePlayerIndicesInLobby,
+} from 'src/utils/napoleaoGame.util';
 import { useCurrentUser } from 'src/hooks/useCurrentUser.hook';
 import { BoardCenter } from '../BoardCenter/BoardCenter';
 import { LobbyData, PlayersInLobby } from 'src/models/napoleaoGame.model';
@@ -17,6 +22,7 @@ import { NapoleaoRoundWinnerResult } from 'src/models/napoleaoRules.util.model';
 import { ChooseNapoleao } from './ChooseNapoleao';
 import { NapoleaoGameOnlineProvider } from './NapoleaoGameOnlineContext';
 import { User } from 'firebase/auth';
+import { SUITS_TYPES } from 'src/constants/deckCard.const';
 
 export const NapoleaoGameOnline = () => {
   const { lobbyId } = useParams();
@@ -24,8 +30,7 @@ export const NapoleaoGameOnline = () => {
   const currentUser = useCurrentUser() ?? ({} as User);
   const currentPlayerIndex = toString(currentUser?.uid);
 
-  const [playersOnline, setPlayersOnline] = useState<ReadonlyArray<PlayersInLobby & { isBot: boolean }>>([]);
-  const [gameStarted, setGameStarted] = useState(false);
+  const [playersOnline, setPlayersOnline] = useState<ReadonlyArray<PlayersInLobby>>([]);
 
   const playersIdArray = useMemo(() => {
     const playersOnlineArray = Array.isArray(playersOnline) ? playersOnline : [];
@@ -42,8 +47,10 @@ export const NapoleaoGameOnline = () => {
       idToConnect: lobbyIdString,
       playersOnline: playersOnline.map(({ uid }) => uid),
     });
-    setGameStarted(true);
-    updateGameProps({ idToConnect: lobbyIdString });
+    updatePlayerIndicesInLobby({ idToConnect: lobbyIdString });
+    createOnlineGameProps({
+      idToConnect: lobbyIdString,
+    });
   }, [playersIdArray]);
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -54,7 +61,7 @@ export const NapoleaoGameOnline = () => {
   const [superSuit, setSuperSuit] = useState('joker');
   const [copinho, setCopinho] = useState('joker');
   const [splitedCards, setSplitedCards] = useState<Record<string, DeckCard[]>>({});
-  const [gameProps, setGameProps] = useState<Record<string, DeckCard[]>>({});
+  const [onlineGameProps, setOnlineGameProps] = useState<any>({});
 
   const copinhoNumberRef = useRef();
   const copinhoSuitRef = useRef();
@@ -67,11 +74,11 @@ export const NapoleaoGameOnline = () => {
   }, [selectedCards]);
 
   const handleClickCard = useCallback(
-    (playerId: string, card: DeckCardConstructor) => {
+    (playerUid: string, card: DeckCardConstructor) => {
       saveRoundCardsPlayed({
         idToConnect: lobbyIdString,
         roundNumber,
-        playerId,
+        playerUid,
         card,
       });
     },
@@ -89,11 +96,11 @@ export const NapoleaoGameOnline = () => {
     const unsubscribe = onSnapshot(doc(db, 'onlineLobby', lobbyIdString), (snap) => {
       const lobbyData = snap.data() as LobbyData | undefined;
       if (!!lobbyData) {
-        const { players, playersCards, rounds, gameProps } = lobbyData;
+        const { players, playersCards, rounds, onlineGameProps } = lobbyData;
         const playersOnline = players?.map((onlinePlayer) => ({ ...onlinePlayer, isBot: false }));
 
         setPlayersOnline(playersOnline);
-        setGameProps(gameProps);
+        setOnlineGameProps(onlineGameProps);
 
         if (!!playersCards) {
           setSplitedCards(playersCards);
@@ -106,6 +113,11 @@ export const NapoleaoGameOnline = () => {
               uid: othePlayerId,
               isBot: true,
               index: index + 10,
+              gameProps: {
+                isCopinho: false,
+                isMyTurn: false,
+                isNapoleao: false,
+              },
             }));
 
           setPlayersOnline([...playersOnline, ...otherPlayers]);
@@ -127,19 +139,19 @@ export const NapoleaoGameOnline = () => {
         currentUser,
         playersOnline,
         splitedCards,
-        gameProps,
+        onlineGameProps,
       }}
     >
       <Table>
-        {!gameStarted && (
+        {!onlineGameProps?.isGameStarted && (
           <Button variant="contained" onClick={startGame}>
             start game
           </Button>
         )}
 
-        {gameStarted && roundNumber === 0 && !isEmpty(splitedCards) && <ChooseNapoleao />}
+        {onlineGameProps?.isGameStarted && roundNumber === 0 && !isEmpty(splitedCards) && <ChooseNapoleao />}
 
-        {!!playersOnline && !gameStarted && (
+        {!!playersOnline && !onlineGameProps?.isGameStarted && (
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <div>
               {playersOnline
@@ -148,7 +160,7 @@ export const NapoleaoGameOnline = () => {
                   <div key={uid}>{name}</div>
                 ))}
             </div>
-            {gameStarted && roundNumber > 0 && (
+            {onlineGameProps?.isGameStarted && roundNumber > 0 && (
               <div>
                 <div>Round: {roundNumber}</div>
                 <div>
@@ -170,7 +182,7 @@ export const NapoleaoGameOnline = () => {
               >
                 <DeckCardComponent
                   key={'player_01'}
-                  card={{ ownerId: 'player_01', key: 'player_01', value: 2, suit: '' }}
+                  card={{ ownerId: 'player_01', key: 'player_01', value: 2, suit: SUITS_TYPES.NoSuit }}
                   isOffside
                 />
               </Grid>
@@ -181,7 +193,7 @@ export const NapoleaoGameOnline = () => {
               >
                 <DeckCardComponent
                   key={'player_02'}
-                  card={{ ownerId: 'player_02', key: 'player_02', value: 2, suit: '' }}
+                  card={{ ownerId: 'player_02', key: 'player_02', value: 2, suit: SUITS_TYPES.NoSuit }}
                   isOffside
                 />
               </Grid>
@@ -195,7 +207,7 @@ export const NapoleaoGameOnline = () => {
               >
                 <DeckCardComponent
                   key={'player_03'}
-                  card={{ ownerId: 'player_03', key: 'player_03', value: 2, suit: '' }}
+                  card={{ ownerId: 'player_03', key: 'player_03', value: 2, suit: SUITS_TYPES.NoSuit }}
                   isOffside
                 />
               </Grid>
@@ -213,7 +225,7 @@ export const NapoleaoGameOnline = () => {
               >
                 <DeckCardComponent
                   key={'player_04'}
-                  card={{ ownerId: 'player_04', key: 'player_04', value: 2, suit: '' }}
+                  card={{ ownerId: 'player_04', key: 'player_04', value: 2, suit: SUITS_TYPES.NoSuit }}
                   isOffside
                 />
               </Grid>
@@ -235,7 +247,7 @@ export const NapoleaoGameOnline = () => {
           </>
         )}
 
-        {gameStarted && roundNumber > 0 && (
+        {onlineGameProps?.isGameStarted && roundNumber > 0 && (
           <div style={{ display: 'flex', gap: 10, flexDirection: 'column', width: '30%' }}>
             {otherPlayersIdArray.length > 0 &&
               splitedCards &&

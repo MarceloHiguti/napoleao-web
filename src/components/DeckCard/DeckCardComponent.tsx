@@ -1,7 +1,9 @@
 import { Box, Typography } from '@mui/material';
-import { DeckCardProps } from './DeckCard.model';
+import { CARD_MASK_TYPE, DeckCardProps } from './DeckCard.model';
+import { HgtDiscardMask } from '../HgtCardMask/HgtDiscardMask';
+import { HgtCopinhoMask } from '../HgtCardMask/HgtCopinhoMask';
 
-export const DeckCardComponent = ({ card, isOffside, onClick }: DeckCardProps) => {
+export const DeckCardComponent = ({ card, isOffside, onClick, mask }: DeckCardProps) => {
   const { key, value, suit } = card;
 
   const handleCardClick = () => {
@@ -12,6 +14,7 @@ export const DeckCardComponent = ({ card, isOffside, onClick }: DeckCardProps) =
     <Box
       key={key}
       sx={{
+        position: 'relative',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -34,6 +37,8 @@ export const DeckCardComponent = ({ card, isOffside, onClick }: DeckCardProps) =
           <Typography>{value}</Typography>
         </>
       )}
+      {mask === CARD_MASK_TYPE.Discard && <HgtDiscardMask />}
+      {mask === CARD_MASK_TYPE.Copinho && <HgtCopinhoMask />}
     </Box>
   );
 };

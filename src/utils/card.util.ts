@@ -1,4 +1,5 @@
 import { Deck } from 'src/components/Deck/Deck.class';
+import { DeckCard } from 'src/components/DeckCard/DeckCard.class';
 import { DeckCardConstructor } from 'src/components/DeckCard/DeckCard.model';
 import { PILE } from 'src/constants/deckCard.const';
 import {
@@ -11,6 +12,7 @@ import {
   DrawCardsReturnValues,
   RecursiveDistributeCardsParams,
 } from 'src/models/card.util.model';
+import lodash from 'lodash';
 
 export function createDeck({
   numbers,
@@ -170,4 +172,16 @@ export function drawCard({ deck, numberToDraw = 1 }: DrawCardsParams): DrawCards
 
     return { cardsDrew, deckPile: copyDeck };
   }
+}
+
+export function findCardBySuitAndValue(
+  data: Record<string, DeckCard[]>,
+  cardConstructor: DeckCardConstructor,
+): DeckCard | undefined {
+  const foundCard = lodash.find(
+    lodash.flatMap(lodash.values(data)),
+    (card) => card.suit === cardConstructor.suit && card.value === cardConstructor.value,
+  );
+
+  return foundCard;
 }
