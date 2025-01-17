@@ -3,6 +3,7 @@ import { DeckCardConstructor } from 'src/components/DeckCard/DeckCard.model';
 
 export interface NapoleaoRoundWinnerParams {
   selectedCards: Record<string, DeckCardConstructor>;
+  validSuit: string;
 }
 export interface NapoleaoRoundWinnerResult {
   winnerId: string;

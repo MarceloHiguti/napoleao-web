@@ -6,6 +6,7 @@ export interface DeckCardConstructor {
   suit: SUITS_TYPES;
   value: number;
   extraParams?: Record<string, any>;
+  extraProps?: Record<string, any>;
 }
 
 export enum CARD_MASK_TYPE {

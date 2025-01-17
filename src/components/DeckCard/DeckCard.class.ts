@@ -9,12 +9,13 @@ export class DeckCard {
   extraParams?: Record<string, any>;
   extraProps?: Record<string, any>;
 
-  constructor({ ownerId, key, suit, value, extraParams }: DeckCardConstructor) {
+  constructor({ ownerId, key, suit, value, extraParams, extraProps }: DeckCardConstructor) {
     this.ownerId = ownerId;
     this.key = key;
     this.suit = suit;
     this.value = value;
     this.extraParams = extraParams ?? {};
+    this.extraProps = extraProps ?? {};
   }
 
   get getOwnerId() {
@@ -64,6 +65,17 @@ export class DeckCard {
     this.extraProps = {
       ...this.extraProps,
       ...newExtraProps,
+    };
+  }
+
+  get toJson() {
+    return {
+      ownerId: this.ownerId,
+      key: this.key,
+      suit: this.suit,
+      value: this.value,
+      extraParams: this.extraParams,
+      extraProps: this.extraProps,
     };
   }
 }

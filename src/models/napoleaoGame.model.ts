@@ -12,6 +12,7 @@ export interface SaveRoundCardsPlayedParams {
   playerUid: string;
   roundNumber: number;
   card: DeckCardConstructor;
+  validSuit: string;
 }
 
 export interface PlayersInLobby {
@@ -59,6 +60,17 @@ export interface UpdatedPlayersCards {
   newGameProps?: OnlineGameProps;
 }
 
+export interface SetCardPlayedInParams {
+  idToConnect: string;
+  currentPlayerUid: string;
+  newPlayerCards: DeckCardConstructor[];
+  currentPlayerIndex: string;
+  newGameProps?: OnlineGameProps;
+  roundNumber: number;
+  card: DeckCardConstructor;
+  validSuit: string;
+}
+
 export interface UpdatedOnlineGameProps {
   idToConnect: string;
   newGameProps?: OnlineGameProps;
@@ -77,5 +89,14 @@ export interface UpdatePlayerDataParams {
     name?: string;
     email?: string;
     index?: number;
+  };
+}
+
+export interface RoundData {
+  playersCard?: Record<string, DeckCardConstructor>;
+  validSuit?: string;
+  roundWinner?: {
+    playerUid: string;
+    honrasQuantity: number;
   };
 }

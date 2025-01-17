@@ -6,10 +6,13 @@ import {
   NapoleaoRoundWinnerParams,
   NapoleaoRoundWinnerResult,
 } from 'src/models/napoleaoRules.util.model';
-import { ACE_AMPLIFIER, COPINHO_AMPLIFIER, SUPER_SUIT_AMPLIFIER } from '../constants/deckCard.const';
+import { ACE_AMPLIFIER, COPINHO_AMPLIFIER, SUITS_TYPES, SUPER_SUIT_AMPLIFIER } from '../constants/deckCard.const';
 import { DeckCard } from 'src/components/DeckCard/DeckCard.class';
 
-export function napoleaoRoundWinner({ selectedCards }: NapoleaoRoundWinnerParams): NapoleaoRoundWinnerResult | null {
+export function napoleaoRoundWinner({
+  selectedCards,
+  validSuit,
+}: NapoleaoRoundWinnerParams): NapoleaoRoundWinnerResult | null {
   const cardsArray = Object.values(selectedCards).map((deckCardConstructor) => new DeckCard(deckCardConstructor));
   console.log('cardsArray', cardsArray);
   const numberOfSelectedCards = cardsArray?.length;
@@ -19,7 +22,7 @@ export function napoleaoRoundWinner({ selectedCards }: NapoleaoRoundWinnerParams
 
   const winner = cardsArray.reduce(
     ({ winnerId, winnerCardStregth, winnerCard }, cardByPlayer) => {
-      const cardStrength = calculateCardStrength({ card: cardByPlayer, validSuit: cardByPlayer.getSuit });
+      const cardStrength = calculateCardStrength({ card: cardByPlayer, validSuit: validSuit });
       const isNewCardStronger = cardStrength > winnerCardStregth;
       const newWinnerIndex = isNewCardStronger ? cardByPlayer.getOwnerId : winnerId;
       const newWinnerCard = isNewCardStronger ? cardByPlayer : winnerCard;
@@ -73,7 +76,11 @@ export function calculateCardStrength({ card, validSuit }: CalculateCardStrength
   const valueAfterCheckSuit = cardIsSuperSuit ? simpleValue + SUPER_SUIT_AMPLIFIER : simpleValue;
   const valueAfterCheckCopinho = cardIsCopinho ? valueAfterCheckSuit + COPINHO_AMPLIFIER : valueAfterCheckSuit;
   const cardHasValidSuit = card.getSuit === validSuit || cardIsSuperSuit || cardIsCopinho;
-  const finalValue = cardHasValidSuit ? valueAfterCheckCopinho : valueAfterCheckCopinho * -1;
+  const finalValue =
+    cardHasValidSuit || card.getSuit === SUITS_TYPES.Joker ? valueAfterCheckCopinho : valueAfterCheckCopinho * -1;
+
+  console.log('card', card);
+  console.log('finalValue', finalValue);
 
   return finalValue;
 }

@@ -1,10 +1,17 @@
-import { useMemo } from 'react';
+import { FC, useMemo } from 'react';
 import { Box } from '@mui/material';
 import { DeckCardComponent } from '../../components/DeckCard/DeckCardComponent';
+import { DeckCardConstructor } from 'src/components/DeckCard/DeckCard.model';
 
-export const BoardCenter = ({ selectedCards, currentPlayerIndex, playersIdArray }) => {
+type BoardCenterProps = {
+  selectedCards: Record<number | string, DeckCardConstructor>;
+  currentPlayerUid: string;
+  playersIdArray: ReadonlyArray<string>;
+};
+
+export const BoardCenter: FC<BoardCenterProps> = ({ selectedCards, currentPlayerUid, playersIdArray }) => {
   const otherPlayers = useMemo(
-    () => playersIdArray.filter((othersIds) => othersIds !== currentPlayerIndex),
+    () => playersIdArray.filter((othersIds: string) => othersIds !== currentPlayerUid),
     [playersIdArray],
   );
   console.log('otherPlayers', otherPlayers);
@@ -43,8 +50,8 @@ export const BoardCenter = ({ selectedCards, currentPlayerIndex, playersIdArray 
 
       <Box sx={{ display: 'grid', gridTemplateColumns: '1fr' }}>
         <Box>
-          {selectedCards?.[currentPlayerIndex] && (
-            <DeckCardComponent key={selectedCards[currentPlayerIndex].key} card={selectedCards[currentPlayerIndex]} />
+          {selectedCards?.[currentPlayerUid] && (
+            <DeckCardComponent key={selectedCards[currentPlayerUid].key} card={selectedCards[currentPlayerUid]} />
           )}
         </Box>
       </Box>

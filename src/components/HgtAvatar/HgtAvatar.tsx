@@ -9,14 +9,15 @@ export const HgtAvatar: FC<HgtAvatarProps> = ({ initials }) => {
   return (
     <Box
       sx={{
-        padding: '8px',
+        padding: '16px',
         borderRadius: '50%',
-        border: '1px solid #000000',
+        border: '1px solid white',
         width: '24px',
         height: '24px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        color: 'white',
       }}
     >
       {initials}

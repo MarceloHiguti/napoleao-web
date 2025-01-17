@@ -1,0 +1,52 @@
+.card_hand {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  // background-color: #007f00;
+  border-radius: 10px;
+}
+
+.card {
+  width: 65px;
+  height: 100px;
+  padding: 10px 15px;
+  border: 1px solid #000;
+  border-radius: 8px;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease;
+
+  &__selected {
+    transform: translateY(-20px);
+  }
+
+  &_black {
+    color: black;
+  }
+
+  &_red {
+    color: red;
+  }
+}
+
+.card_content {
+  font-family: 'Arial', sans-serif;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.card_value {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.card_suit {
+  font-size: 46px;
+  margin-top: 5px;
+}

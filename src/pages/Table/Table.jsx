@@ -1,9 +1,5 @@
-import { Box } from "@mui/material"
+import styles from './Table.module.scss';
 
-export const Table = ({children}) => {
-  return (
-    <Box>
-      {children}
-    </Box>
-  )
-}
+export const Table = ({ children }) => {
+  return <div className={styles.tableWrapper}>{children}</div>;
+};

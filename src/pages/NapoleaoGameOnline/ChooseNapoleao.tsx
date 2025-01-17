@@ -47,11 +47,16 @@ export const ChooseNapoleao: FC<ChooseNapoleaoProps> = () => {
       // clean mask after changing pile of cards
       if (gameStep === GAME_STEPS.ChooseCopinho) {
         handCard.extraProps = {};
+        if (handCard.suit === copinhoCardAndOwner?.card?.suit && handCard.value === copinhoCardAndOwner?.card?.value) {
+          handCard.extraProps = {
+            mask: CARD_MASK_TYPE.Copinho,
+          };
+        }
       }
     }
 
     return myHand;
-  }, [discardToPile, splitedCards]);
+  }, [discardToPile, splitedCards, copinhoCardAndOwner]);
 
   if (!user) {
     return null;
@@ -153,6 +158,17 @@ export const ChooseNapoleao: FC<ChooseNapoleaoProps> = () => {
             extraProps: {
               mask: CARD_MASK_TYPE.Copinho,
             },
+            extraParams: {
+              isCopinho: true,
+            },
+          };
+        }
+        if (card.suit === selectedSuperSuit) {
+          return {
+            ...card,
+            extraParams: {
+              isSuperSuit: true,
+            },
           };
         }
         return card;
@@ -173,7 +189,9 @@ export const ChooseNapoleao: FC<ChooseNapoleaoProps> = () => {
     });
   };
 
-  const handleStartGame = () => {};
+  const handleStartGame = () => {
+    updateOnlineGameProps({ idToConnect: lobbyId, newGameProps: { roundNumber: 1 } });
+  };
 
   return (
     <Box sx={{ padding: '16px' }}>
@@ -182,7 +200,7 @@ export const ChooseNapoleao: FC<ChooseNapoleaoProps> = () => {
           .filter(({ uid: otherUid }) => otherUid !== currentUser.uid)
           .map(({ name, uid: otherPlayerUid }) => {
             return (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <Box key={otherPlayerUid} sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <HgtAvatar initials={name.substring(0, 2)?.toUpperCase()} />
                 {napoleaoPlayerUid === otherPlayerUid && `Napoleão: ${napoleaoNumber}`}
               </Box>
@@ -221,6 +239,7 @@ export const ChooseNapoleao: FC<ChooseNapoleaoProps> = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {['11', '12', '13', '14', '15', '16', 'mesa'].map((napoleaoQuantity) => (
             <Button
+              key={napoleaoQuantity}
               variant="contained"
               onClick={() => handleNapoleaoChoice(napoleaoQuantity)}
               disabled={isNapoleaoButtonDisabled(napoleaoQuantity)}
@@ -232,6 +251,7 @@ export const ChooseNapoleao: FC<ChooseNapoleaoProps> = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {[...SUITS, SUITS_TYPES.NoSuit].map((suitValue) => (
             <Button
+              key={suitValue}
               variant="contained"
               sx={{ backgroundColor: suitValue === selectedSuperSuit ? 'red' : 'blue' }}
               onClick={() => setSelectedSuperSuit(suitValue)}

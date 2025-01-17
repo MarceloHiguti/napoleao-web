@@ -8,12 +8,15 @@ import {
   NextRoundParams,
   SaveNapoleaoSplitedCardsInFirebaseParams,
   SaveRoundCardsPlayedParams,
+  SetCardPlayedInParams,
   UpdatedOnlineGameProps,
   UpdatedPlayersCards,
   UpdatePlayerDataParams,
 } from 'src/models/napoleaoGame.model';
 
 import { merge } from 'lodash';
+import { DeckCard } from 'src/components/DeckCard/DeckCard.class';
+import { napoleaoDeckModifier } from './napoleaoRules.util';
 
 export async function connectPlayerToLobby(idToConnect: string) {
   try {
@@ -49,15 +52,18 @@ export async function saveNapoleaoSplitedCardsInFirebase({
   playersOnline,
 }: SaveNapoleaoSplitedCardsInFirebaseParams) {
   const deck = shuffleDeck(createDeck({ numbers: NUMBERS, suits: SUITS, extraCards: JOKER }));
+  const cards = deck.map((deckCardConstructor) => new DeckCard(deckCardConstructor));
+  const modifiedDeck = napoleaoDeckModifier({ cards });
+  const modifiedDeckObjectArray = modifiedDeck.map((cardsInstance) => cardsInstance.toJson);
   const distributedCards = distributeCards({
-    deck,
+    deck: modifiedDeckObjectArray,
     numberOfCards: 10,
     numberOfPlayers: 5,
     playersIndex: playersOnline,
   });
   const collectionLobbyRef = collection(db, 'onlineLobby');
 
-  setDoc(
+  await setDoc(
     doc(collectionLobbyRef, idToConnect),
     {
       playersCards: distributedCards,
@@ -98,14 +104,81 @@ export async function updateSplitedCardsInFirebase({
   }
 }
 
-export async function saveRoundCardsPlayed({ idToConnect, roundNumber, playerUid, card }: SaveRoundCardsPlayedParams) {
+export async function setCardPlayedInFirebase({
+  idToConnect,
+  newPlayerCards,
+  currentPlayerIndex,
+  currentPlayerUid,
+  newGameProps,
+  roundNumber,
+  card,
+  validSuit,
+}: SetCardPlayedInParams) {
+  try {
+    const lobbyRef = doc(db, 'onlineLobby', idToConnect);
+    const lobbyDoc = await getDoc(lobbyRef);
+
+    if (!lobbyDoc.exists()) {
+      throw new Error(`Lobby with ID ${idToConnect} does not exist`);
+    }
+
+    const playersCards = lobbyDoc.data()?.playersCards;
+    const onlineGameProps = lobbyDoc.data()?.onlineGameProps;
+    const rounds = lobbyDoc.data()?.rounds;
+
+    if (!playersCards) {
+      throw new Error(`playersCards not found in lobby ${idToConnect}`);
+    }
+
+    const updatedPlayersCards = { ...playersCards, [currentPlayerUid]: newPlayerCards };
+
+    const playerIndexNumber = Number(currentPlayerIndex);
+    const nextPlayerIndex = playerIndexNumber === 4 ? 0 : playerIndexNumber + 1;
+    const updatedOnlineGameProps = {
+      ...onlineGameProps,
+      ...newGameProps,
+      turnFromPlayerIndex: nextPlayerIndex,
+    };
+
+    const newRounds = {
+      [roundNumber]: {
+        playersCard: {
+          [currentPlayerUid]: card,
+        },
+        validSuit,
+      },
+    };
+    const roundsToUpdate = merge({}, rounds, newRounds);
+
+    console.log('updatedOnlineGameProps', updatedOnlineGameProps);
+
+    await updateDoc(lobbyRef, {
+      [`playersCards`]: updatedPlayersCards,
+      [`onlineGameProps`]: updatedOnlineGameProps,
+      [`rounds`]: roundsToUpdate,
+    });
+  } catch (error) {
+    console.error('Error updating PlayersCards data: ', error);
+  }
+}
+
+export async function saveRoundCardsPlayed({
+  idToConnect,
+  roundNumber,
+  playerUid,
+  card,
+  validSuit,
+}: SaveRoundCardsPlayedParams) {
   const collectionLobbyRef = collection(db, 'onlineLobby');
-  setDoc(
+  await setDoc(
     doc(collectionLobbyRef, idToConnect),
     {
       rounds: {
         [roundNumber]: {
-          [playerUid]: card,
+          playersCard: {
+            [playerUid]: card,
+          },
+          validSuit,
         },
       },
     },
@@ -117,7 +190,7 @@ export async function createOnlineGameProps({ idToConnect }: { idToConnect: stri
   try {
     const collectionLobbyRef = collection(db, 'onlineLobby');
 
-    setDoc(
+    await setDoc(
       doc(collectionLobbyRef, idToConnect),
       {
         onlineGameProps: {
@@ -159,7 +232,7 @@ export async function updateOnlineGameProps({ idToConnect, newGameProps }: Updat
   }
 }
 
-export async function setNextTurn({ idToConnect, currentPlayerIndex, newGameProps }: NextRoundParams) {
+export async function setNextTurn({ idToConnect, currentPlayerIndex, newGameProps = {} }: NextRoundParams) {
   const nextPlayerIndex = currentPlayerIndex === 4 ? 0 : currentPlayerIndex + 1;
   const updatedGameProps = {
     ...newGameProps,
